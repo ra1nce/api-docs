@@ -20,6 +20,9 @@ class DocTemplate:
                 else:
                     pattern_name, pattern_desc = pattern_data[0], "None"
 
+                if any(map(lambda i: i["name"] == pattern_name, pattern_list)):
+                    continue
+
                 pattern_list.append({
                     "name": pattern_name,
                     "desc": pattern_desc
