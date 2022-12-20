@@ -79,5 +79,18 @@ def get_template_list():
     return {"status": True, "data": config.data["templates"]}
 
 
+@app.route('/delete_template', methods=['GET'])
+def delete_template():
+    try:
+        template_id = request.args.get('id', type=int)
+    except:
+        return {"status": False, "msg": "Missing template id, use: /delete_template?id=$ID"}
+
+    config.data["templates"] = list(filter(lambda i: i["id"] != template_id, config.data["templates"]))
+    config.save()
+
+    return {"status": True}
+
+
 if __name__ == "__main__":
     app.run(debug=True)
