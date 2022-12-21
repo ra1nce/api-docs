@@ -18,7 +18,7 @@ class DocTemplate:
                 if len(pattern_data) == 2:
                     pattern_name, pattern_desc = pattern_data
                 else:
-                    pattern_name, pattern_desc = pattern_data[0], "None"
+                    pattern_name, pattern_desc = pattern_data[0], "Nonei"
 
                 if any(map(lambda i: i["name"] == pattern_name, pattern_list)):
                     continue
@@ -34,19 +34,36 @@ class DocTemplate:
             patterns = re.findall("\{\{.+\}\}", paragraph.text)
 
             for pattern in patterns:
-                print(pattern)
                 pattern_name = pattern[3:-3:].split(":")[0]
                 if pattern_name in data:
-                    print(pattern_name)
-                    self.replace_text_in_paragraph(paragraph, pattern, data[pattern_name])
+                    self.replace_text_in_paragraph(paragraph, data[pattern_name])
+
         path = f"temp/{random.randint(0, 999999999)}.docx"
         self.document.save(path)
         return path
 
     @staticmethod
-    def replace_text_in_paragraph(paragraph, key, value):
+    def replace_text_in_paragraph(paragraph, value):
+        items = []
+        close_char_count = 0
+        is_open = False
+
         for item in paragraph.runs:
-            print(item.text, key)
-            if key in item.text:
-                print("REPLACE")
-                item.text = item.text.replace(key, value)
+            if is_open:
+                items.append(item)
+                close_char_count += item.text.count("}")
+            else:
+                if "{" in item.text:
+                    is_open = True
+                    items.append(item)
+
+                    close_char_count += item.text.count("}")
+
+            if close_char_count == 2:
+                break
+
+        items[0].text = value
+
+        for item in items[1:]:
+            item.text = ""    
+
