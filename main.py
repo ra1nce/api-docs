@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 
 from doc import DocTemplate
 from config import Config
+from database import Database
 
 
 config = Config()
@@ -48,7 +49,10 @@ def get_template_info():
     try:
         template_id = request.args.get('id', type=int)
     except:
-        return {"status": False, "msg": "Missing template id, use: /get_template_info?id=$ID"}
+        return {
+            "status": False, 
+            "msg": "Missing template id, use: /get_template_info?id=$ID",
+        }
 
     template_info = config.get_template_info(template_id)
 
@@ -65,7 +69,10 @@ def fill_template():
     try:
         template_id = request.args.get('id', type=int)
     except:
-        return {"status": False, "msg": "Missing template id, use: /get_template_info?id=$ID"}
+        return {
+            "status": False, 
+            "msg": "Missing template id, use: /get_template_info?id=$ID",
+        }
 
     template_info = config.get_template_info(template_id)
     template = DocTemplate(template_info["file_path"])
@@ -84,12 +91,185 @@ def delete_template():
     try:
         template_id = request.args.get('id', type=int)
     except:
-        return {"status": False, "msg": "Missing template id, use: /delete_template?id=$ID"}
+        return {
+            "status": False, 
+            "msg": "Missing template id, use: /delete_template?id=$ID",
+        }
 
-    config.data["templates"] = list(filter(lambda i: i["id"] != template_id, config.data["templates"]))
+    config.data["templates"] = list(
+        filter(
+            function=lambda i: i["id"] != template_id,
+            iterable=config.data["templates"],
+        )
+    )
     config.save()
 
     return {"status": True}
+
+
+@app.route('/create_database', methods=['GET'])
+def create_database():
+    database_name = request.args.get("name")
+
+    if database_name is None:
+        return {
+            "status": False, 
+            "msg": "Missing 'name', use: /create_database?name=$NAME",
+        }
+
+    Database.create_database(database_name)
+    return {"status": True}
+
+
+@app.route('/delete_database', methods=['GET'])
+def delete_database():
+    db_name = request.args.get("db_name")
+
+    if db_name is None:
+        return {
+            "status": False, 
+            "msg": "Missing 'db_name', use: /delete_database?db_name=$DB_NAME",
+        }
+
+    Database.delete_database(db_name)
+    return {"status": True}
+
+
+@app.route('/create_table', methods=['GET'])
+def create_table():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+
+    table_name = request.args.get("table_name")
+    columns = request.args.get("columns")
+
+    if all([db_name, table_name, columns]):
+        db = Database(db_name)
+        db.create_table(table_name, columns)
+        return {"status": True}
+
+    return {
+        "status": False, 
+        "msg": "Missing args",
+    }
+
+
+@app.route('/delete_table', methods=['GET'])
+def delete_table():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+
+    table_name = request.args.get("table_name")
+
+    if all([db_name, table_name]):
+        db = Database(db_name)
+        db.drop_table(table_name)
+        return {"status": True}
+
+    return {
+        "status": False, 
+        "msg": "Missing args",
+    }
+
+
+@app.route('/add_row_to_table', methods=['GET'])
+def add_row_to_table():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+
+    table_name = request.args.get("table_name")
+    data = request.args.get("data")
+
+    if all([db_name, table_name, data]):
+        db = Database(db_name)
+        db.add_row_to_table(table_name, data)
+        return {"status": True}
+
+    return {
+        "status": False, 
+        "msg": "Missing args",
+    }
+
+
+@app.route('/delete_row_from_table', methods=['GET'])
+def delete_row_from_table():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+
+    table_name = request.args.get("table_name")
+    _id = request.args.get("id")
+
+    if all([db_name, table_name, _id]):
+        db = Database(db_name)
+        db.delete_row_from_table(table_name, _id)
+        return {"status": True}
+
+    return {
+        "status": False, 
+        "msg": "Missing args",
+    }
+
+
+@app.route('/get_databases', methods=['GET'])
+def get_databases():
+    return {"status": True, "data": Database.get_databases()}
+
+
+@app.route('/get_rows_from_table', methods=['GET'])
+def get_rows_from_table():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+
+    table_name = request.args.get("table_name")
+    db = Database(db_name)
+    return {"status": True, "data": db.get_rows_from_table(table_name)}
+
+
+@app.route('/get_tables', methods=['GET'])
+def get_tables():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+    
+    db = Database(db_name)
+    return {"status": True, "data": db.get_tables()}
+
+
+@app.route('/get_info_columns_of_table', methods=['GET'])
+def get_info_columns_of_table():
+    db_name = request.args.get("db_name")
+    if db_name not in Database.get_databases():
+        return {
+            "status": False, 
+            "msg": f"Database '{db_name}' not found!",
+        }
+
+    table_name = request.args.get("table_name")
+    db = Database(db_name)
+    return {"status": True, "data": db.get_info_columns_of_table(table_name)}
 
 
 if __name__ == "__main__":
