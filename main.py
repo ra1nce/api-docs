@@ -8,10 +8,14 @@ from doc import DocTemplate
 from config import Config
 from database import Database
 
+from flask_cors import CORS
+
+import json
 
 config = Config()
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "UPLOADED_FILES"
+CORS(app)
 
 
 @app.route('/upload_template', methods=['POST'])
@@ -50,7 +54,7 @@ def get_template_info():
         template_id = request.args.get('id', type=int)
     except:
         return {
-            "status": False, 
+            "status": False,
             "msg": "Missing template id, use: /get_template_info?id=$ID",
         }
 
@@ -70,7 +74,7 @@ def fill_template():
         template_id = request.args.get('id', type=int)
     except:
         return {
-            "status": False, 
+            "status": False,
             "msg": "Missing template id, use: /get_template_info?id=$ID",
         }
 
@@ -92,7 +96,7 @@ def delete_template():
         template_id = request.args.get('id', type=int)
     except:
         return {
-            "status": False, 
+            "status": False,
             "msg": "Missing template id, use: /delete_template?id=$ID",
         }
 
@@ -113,7 +117,7 @@ def create_database():
 
     if database_name is None:
         return {
-            "status": False, 
+            "status": False,
             "msg": "Missing 'name', use: /create_database?name=$NAME",
         }
 
@@ -127,7 +131,7 @@ def delete_database():
 
     if db_name is None:
         return {
-            "status": False, 
+            "status": False,
             "msg": "Missing 'db_name', use: /delete_database?db_name=$DB_NAME",
         }
 
@@ -140,12 +144,12 @@ def create_table():
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
 
     table_name = request.args.get("table_name")
-    columns = request.args.get("columns")
+    columns = request.args.getlist("columns")
 
     if all([db_name, table_name, columns]):
         db = Database(db_name)
@@ -153,7 +157,7 @@ def create_table():
         return {"status": True}
 
     return {
-        "status": False, 
+        "status": False,
         "msg": "Missing args",
     }
 
@@ -163,7 +167,7 @@ def delete_table():
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
 
@@ -175,22 +179,23 @@ def delete_table():
         return {"status": True}
 
     return {
-        "status": False, 
+        "status": False,
         "msg": "Missing args",
     }
 
 
-@app.route('/add_row_to_table', methods=['GET'])
+@app.route('/add_row_to_table', methods=["GET"])
 def add_row_to_table():
+
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
 
     table_name = request.args.get("table_name")
-    data = request.args.get("data")
+    data = json.loads(request.args.get("data"))
 
     if all([db_name, table_name, data]):
         db = Database(db_name)
@@ -198,7 +203,7 @@ def add_row_to_table():
         return {"status": True}
 
     return {
-        "status": False, 
+        "status": False,
         "msg": "Missing args",
     }
 
@@ -208,7 +213,7 @@ def delete_row_from_table():
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
 
@@ -221,7 +226,7 @@ def delete_row_from_table():
         return {"status": True}
 
     return {
-        "status": False, 
+        "status": False,
         "msg": "Missing args",
     }
 
@@ -236,7 +241,7 @@ def get_rows_from_table():
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
 
@@ -250,10 +255,10 @@ def get_tables():
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
-    
+
     db = Database(db_name)
     return {"status": True, "data": db.get_tables()}
 
@@ -263,7 +268,7 @@ def get_info_columns_of_table():
     db_name = request.args.get("db_name")
     if db_name not in Database.get_databases():
         return {
-            "status": False, 
+            "status": False,
             "msg": f"Database '{db_name}' not found!",
         }
 
@@ -273,4 +278,4 @@ def get_info_columns_of_table():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=3000,debug=True)

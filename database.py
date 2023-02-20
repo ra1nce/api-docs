@@ -47,13 +47,14 @@ class Database:
         return result
 
     def create_table(self, table_name: str, columns: list[str]) -> None:
-        sql_columns = ",\n    ".join([f"{i} TEXT" for i in columns])
+        sql_columns = ", ".join([f"{i} TEXT" for i in columns])
         sql = f"""
 CREATE TABLE IF NOT EXISTS {table_name} (
-    id INTEGER PRIMARY KEY AUTOINCREMENT
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     {sql_columns}
 );
 """
+        print(sql)
         self.cursor.execute(sql)
         self.conn.commit()
 
