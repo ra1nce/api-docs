@@ -80,3 +80,16 @@ CREATE TABLE IF NOT EXISTS {table_name} (
     def delete_row_from_table(self, table_name: str, id: int) -> None:
         self.cursor.execute(f"DELETE FROM {table_name} WHERE id = ?", (id, ))
         self.conn.commit()
+
+    def get_table_rows(self, table: str) -> list[dict]:
+        self.conn.row_factory = Database.dict_factory
+        cursor = self.conn.cursor()
+        cursor.execute(f'SELECT * FROM {table}')
+        return cursor.fetchall()
+
+    @staticmethod
+    def dict_factory(cursor, row):
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return d

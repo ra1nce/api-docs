@@ -277,5 +277,41 @@ def get_info_columns_of_table():
     return {"status": True, "data": db.get_info_columns_of_table(table_name)}
 
 
+@app.route('/multi_fill_template', methods=['GET'])
+def multi_fill_template():
+    data = dict(request.args)
+    template_id = request.args.get('id', type=int)
+    database = request.args.get('database', type=str)
+    table = request.args.get('table', type=str)
+
+    if template_id is None:
+        return {
+            "status": False,
+            "msg": "Missing or invalid template_id, use: /multi_fill_template?id=$ID",
+        }
+    elif database is None:
+        return {
+            "status": False,
+            "msg": "Missing database id, use: /multi_fill_template?database=$DATABASE",
+        }
+    elif table is None:
+        return {
+            "status": False,
+            "msg": "Missing table id, use: /multi_fill_template?table=$TABLE",
+        }
+
+    try:
+        zip_file_path = DocTemplate.multi_fill_template(
+                config, template_id, database, table, data
+            )
+    except Exception as e:
+        return {
+            "status": False,
+            "msg": str(e),
+        }
+
+    return send_file(zip_file_path)
+
+  
 if __name__ == "__main__":
     app.run(port=3000,debug=True)

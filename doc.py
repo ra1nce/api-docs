@@ -1,8 +1,10 @@
 import random
 import re
+import zipfile
 
 from docx import Document
-
+from config import Config
+from database import Database
 
 class DocTemplate:
     def __init__(self, file_path: str):
@@ -67,3 +69,48 @@ class DocTemplate:
         for item in items[1:]:
             item.text = ""    
 
+    @staticmethod
+    def multi_fill_template(
+        config: Config, 
+        template_id: int, 
+        database: str, 
+        table: str, 
+        data: dict
+    ) -> str:
+        template_info = config.get_template_info(template_id)
+        file_paths = []
+        db = Database(database_filename=database)
+        table_data = db.get_table_rows(table)
+
+        for row in table_data:
+            template = DocTemplate(template_info["file_path"])
+            data_for_template = DocTemplate.get_data_for_template(data, row)
+            path = template.fill_template(data_for_template)
+
+            file_paths.append(path)
+
+        zip_file_path = f"temp/{random.randint(0, 9**9)}.zip"
+
+        with zipfile.ZipFile(zip_file_path, 'w') as zip:
+            for file_path in file_paths:
+                zip.write(file_path)
+
+        return zip_file_path
+
+    @staticmethod
+    def get_data_for_template(req_data: dict, row: dict):
+        data = {}
+
+        for key, value in req_data.items():
+            if key in ["id", "database", "table"]:
+                continue
+
+            data.update({key: row[value]})
+
+        return data
+
+
+
+
+
+    
