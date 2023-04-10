@@ -102,8 +102,8 @@ def delete_template():
 
     config.data["templates"] = list(
         filter(
-            function=lambda i: i["id"] != template_id,
-            iterable=config.data["templates"],
+            lambda i: i["id"] != template_id,
+            config.data["templates"],
         )
     )
     config.save()
