@@ -26,19 +26,47 @@ class DocTemplate:
         for paragraph in paragraphs:
             patterns = re.findall("\{\{.+\}\}", paragraph.text)
             for pattern in patterns:
-                pattern_data = pattern[3:-3:].split(":")
-                if len(pattern_data) == 2:
-                    pattern_name, pattern_desc = pattern_data
+                temp = pattern.split("}} {{")
+                            
+                if len(temp) > 1:
+                    list_patterns = []
+                    a = 0
+                    for i in temp:
+                        if a % 2:
+                            list_patterns.append("{{" + i)
+                        else:
+                            list_patterns.append(i + "}}")
+                        
+                        a += 1
+
+                    for i in list_patterns:
+                        pattern_data = i[3:-3:].split(":")
+                        if len(pattern_data) == 2:
+                            pattern_name, pattern_desc = pattern_data
+                        else:
+                            pattern_name, pattern_desc = pattern_data[0], "None"
+
+                        if any(map(lambda i: i["name"] == pattern_name, pattern_list)):
+                            continue
+
+                        pattern_list.append({
+                            "name": pattern_name,
+                            "desc": pattern_desc
+                        })
                 else:
-                    pattern_name, pattern_desc = pattern_data[0], "Nonei"
+                    pattern_data = pattern[3:-3:].split(":")
+                    if len(pattern_data) == 2:
+                        pattern_name, pattern_desc = pattern_data
+                    else:
+                        pattern_name, pattern_desc = pattern_data[0], "None"
 
-                if any(map(lambda i: i["name"] == pattern_name, pattern_list)):
-                    continue
+                    if any(map(lambda i: i["name"] == pattern_name, pattern_list)):
+                        continue
 
-                pattern_list.append({
-                    "name": pattern_name,
-                    "desc": pattern_desc
-                })
+                    pattern_list.append({
+                        "name": pattern_name,
+                        "desc": pattern_desc
+                    })
                 
         return pattern_list
 
