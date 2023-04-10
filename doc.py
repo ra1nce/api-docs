@@ -43,16 +43,17 @@ class DocTemplate:
         return pattern_list
 
     def fill_template(self, data: dict):
-        for row in self.document.tables[0].rows:
-            for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    patterns = re.findall("\{\{.+\}\}", paragraph.text)
+        for table in self.document.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    for paragraph in cell.paragraphs:
+                        patterns = re.findall("\{\{.+\}\}", paragraph.text)
 
-                    for pattern in patterns:
-                        pattern_name = pattern[3:-3:].split(":")[0]
-                        
-                        if pattern_name in data:
-                            paragraph.text = paragraph.text.replace(pattern, data[pattern_name])
+                        for pattern in patterns:
+                            pattern_name = pattern[3:-3:].split(":")[0]
+                            
+                            if pattern_name in data:
+                                paragraph.text = paragraph.text.replace(pattern, data[pattern_name])
 
         for paragraph in self.document.paragraphs:
             patterns = re.findall("\{\{.+\}\}", paragraph.text)
