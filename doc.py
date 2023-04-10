@@ -50,19 +50,57 @@ class DocTemplate:
                         patterns = re.findall("\{\{.+\}\}", paragraph.text)
 
                         for pattern in patterns:
-                            pattern_name = pattern[3:-3:].split(":")[0]
+                            temp = pattern.split("}} {{")
                             
-                            if pattern_name in data:
-                                paragraph.text = paragraph.text.replace(pattern, data[pattern_name])
+                            if len(temp) > 1:
+                                list_patterns = []
+                                a = 0
+                                for i in temp:
+                                    if a % 2:
+                                        list_patterns.append("{{" + i)
+                                    else:
+                                        list_patterns.append(i + "}}")
+                                    
+                                    a += 1
+
+                                for i in list_patterns:
+                                    pattern_name = i[3:-3:].split(":")[0]
+                                    
+                                    if pattern_name in data:
+                                        paragraph.text = paragraph.text.replace(i, data[pattern_name])
+                            else:
+                                pattern_name = pattern[3:-3:].split(":")[0]
+                                    
+                                if pattern_name in data:
+                                    paragraph.text = paragraph.text.replace(pattern, data[pattern_name])
 
         for paragraph in self.document.paragraphs:
             patterns = re.findall("\{\{.+\}\}", paragraph.text)
 
             for pattern in patterns:
-                pattern_name = pattern[3:-3:].split(":")[0]
+                temp = pattern.split("}} {{")
+                            
+                if len(temp) > 1:
+                    list_patterns = []
+                    a = 0
+                    for i in temp:
+                        if a % 2:
+                            list_patterns.append("{{" + i)
+                        else:
+                            list_patterns.append(i + "}}")
+                        
+                        a += 1
 
-                if pattern_name in data:
-                    self.replace_text_in_paragraph(paragraph, data[pattern_name])
+                    for i in list_patterns:
+                        pattern_name = i[3:-3:].split(":")[0]
+                        
+                        if pattern_name in data:
+                            paragraph.text = paragraph.text.replace(i, data[pattern_name])
+                else:
+                    pattern_name = pattern[3:-3:].split(":")[0]
+
+                    if pattern_name in data:
+                        self.replace_text_in_paragraph(paragraph, data[pattern_name])
 
         path = f"temp/{random.randint(0, 999999999)}.docx"
         self.document.save(path)
